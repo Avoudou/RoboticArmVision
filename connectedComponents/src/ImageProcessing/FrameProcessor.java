@@ -16,37 +16,42 @@ import graphSearch.ImageMatrixCell;
 
 public class FrameProcessor {
 
-	private List<Coordinates>  velocityEstimationList;
-	private int zeroDistanceCompSize=100;
-	private int  referanceDistanceCompSize=1000;
+
+	private List<Coordinates> velocityEstimationList;
+	private HashMap<FocusState, Coordinates> jointPosistions = new HashMap<>();
+	private int zeroDistanceCompSize = 100;
+	private int referanceDistanceCompSize = 1000;
 	private int referanceDistance = 500;
-	
-	public FrameProcessor(int zeroZsize,int referanceZsize){
-		velocityEstimationList= new ArrayList<>();
-		this.zeroDistanceCompSize=zeroZsize;
-		this.referanceDistance=referanceZsize;
+	private final int STEPS_TO_GET_MEAN_VELOCITY = 6;
+
+	public FrameProcessor(int zeroZsize, int referanceZsize) {
+		velocityEstimationList = new ArrayList<>();
+		this.zeroDistanceCompSize = zeroZsize;
+		this.referanceDistance = referanceZsize;
 	}
 
-	public Coordinates getCoordinatesOfSignificantObject(Mat mat, String objectDescription) {
-		ConnectedComponents	componentAnalyzer = new ConnectedComponents(mat);
+	public Coordinates getCoordinatesOfSignificantObject(Mat mat, FocusState objectDescription) {
+		ConnectedComponents componentAnalyzer = new ConnectedComponents(mat);
 		Graph<ImageMatrixCell, ?> objectGraph = componentAnalyzer.getBiggestComponent();
-		if(objectGraph!=null && objectGraph.getSize() > 0) {
-			Coordinates cords = getMeanCenterForGraph(objectGraph,objectDescription);
-			System.out.println("Coords for " + objectDescription + ": X = " + cords.getX() + " Y = " + cords.getY() + "size :"+ objectGraph.getSize());
-			
-			if(objectDescription=="ball"){
-				if(velocityEstimationList.size()<6){
-					velocityEstimationList.add(cords);	
-				}else{
+		if (objectGraph != null && objectGraph.getSize() > 0) {
+			Coordinates cords = getMeanCenterForGraph(objectGraph, objectDescription.toString());
+			System.out.println("Coords for " + objectDescription.toString().toLowerCase() + ": X = " + cords.getX() + " Y = " + cords.getY()
+					+ " Size :" + objectGraph.getSize());
+			jointPosistions.put(objectDescription, cords);
+	
+			if (objectDescription == FocusState.BALL) {
+				if (velocityEstimationList.size() < STEPS_TO_GET_MEAN_VELOCITY) {
+					velocityEstimationList.add(cords);
+				} else {
 					velocityEstimationList.remove(0);
 					velocityEstimationList.add(cords);
 				}
 			}
-			
+
 			return cords;
-		} 
-		return new Coordinates(-999, -999,-999);
-	}	
+		}
+		return new Coordinates(-999, -999, -999);
+	}
 
 	public Coordinates getMeanCenterForGraph(Graph<ImageMatrixCell, ?> graph,String objectDescription){
 		int avgX = 0;
@@ -64,6 +69,7 @@ public class FrameProcessor {
 		}
 		return new Coordinates(avgX, avgY,0);
 	}
+
 	public Coordinates getMovingObjectEstimatedCoordinates(){
 		float pointAX= velocityEstimationList.get(velocityEstimationList.size()-1).getX();
 		float pointAY= velocityEstimationList.get(velocityEstimationList.size()-1).getY();
@@ -84,22 +90,15 @@ public class FrameProcessor {
 		
 		return new Coordinates((int)predictonX, (int)predictonY,0);
 	}
-	
-	private double calculateBallZ(Graph<ImageMatrixCell, ?> graph){
+
+	private double calculateBallZ(Graph<ImageMatrixCell, ?> graph) {
 		int currentCompSize = graph.getSize();
-		double increment = (referanceDistanceCompSize-zeroDistanceCompSize)/referanceDistance*1.0;
-		double  z= increment*(currentCompSize-zeroDistanceCompSize);
+		double increment = (referanceDistanceCompSize - zeroDistanceCompSize) / referanceDistance * 1.0;
+		double z = increment * (currentCompSize - zeroDistanceCompSize);
 		return z;
 	}
 
 	public HashMap<FocusState, Coordinates> getJointPosistions() {
-		// TODO Auto-generated method stub
-		return null;
+		return jointPosistions;
 	}
-
-	public void getCoordinatesOfSignificantObject(Mat morphOutput, FocusState context) {
-		// TODO Auto-generated method stub
-		
-	}
-	
 }
