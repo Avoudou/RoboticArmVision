@@ -91,5 +91,15 @@ public class FrameProcessor {
 		double  z= increment*(currentCompSize-zeroDistanceCompSize);
 		return z;
 	}
+
+	public HashMap<FocusState, Coordinates> getJointPosistions() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public void getCoordinatesOfSignificantObject(Mat morphOutput, FocusState context) {
+		// TODO Auto-generated method stub
+		
+	}
 	
 }
