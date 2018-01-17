@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+	
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.text.*?>
+	
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="detection.ObjRecognitionController">
+	<right>
+		<VBox alignment="CENTER" spacing="10">
+			<padding>
+				<Insets right="10" left="10" />
+			</padding>
+			<Label text="Hue Start" />
+			<Slider fx:id="hueStart" min="0" max="180" value="20" blockIncrement="1" />
+			<Label text="Hue Stop" />
+			<Slider fx:id="hueStop" min="0" max="180" value="50" blockIncrement="1" />
+			<Label text="Saturation Start" />
+			<Slider fx:id="saturationStart" min="0" max="255" value="60" blockIncrement="1" />
+			<Label text="Saturation Stop" />
+			<Slider fx:id="saturationStop" min="0" max="255" value="200" blockIncrement="1" />
+			<Label text="Value Start" />
+			<Slider fx:id="valueStart" min="0" max="255" value="50" blockIncrement="1" />
+			<Label text="Value Stop" />
+			<Slider fx:id="valueStop" min="0" max="255" value="255" blockIncrement="1" />
+			<Label text="Blur" />
+			<Slider fx:id="blur" min="1" max="40" value="7" blockIncrement="1" />
+			<Label text="Erosion" />
+			<Slider fx:id="erosion" min="1" max="40" value="7" blockIncrement="1" />
+			<Label text="Dilation" />
+			<Slider fx:id="dilation" min="1" max="40" value="7" blockIncrement="1" />
+			<Separator/>
+			<Button fx:id="ballFocus" alignment="center" text="Ball" onAction="#setBallFocus" />
+			<Button fx:id="topJointFocus" alignment="center" text="Top Joint" onAction="#setTopJointFocus" />
+			<Button fx:id="midJointFocus" alignment="center" text="Middle Joint" onAction="#setMidJointFocus" />
+			<Button fx:id="botJointFocus" alignment="center" text="Bottom Joint" onAction="#setBotJointFocus" />
+			<Button fx:id="originFocus" alignment="center" text="Origin" onAction="#setOriginFocus" />
+			<Separator/>
+			<Button fx:id="detectionButton" alignment="center" text="Turn On Detection" onAction="#toggleDetection" />
+		</VBox>
+	</right>
+	<center>
+		<HBox alignment="CENTER" spacing="5">
+			<padding>
+				<Insets right="10" left="10" />
+			</padding>
+			<ImageView fx:id="originalFrame" />
+			<VBox alignment="CENTER" spacing="5">
+				<ImageView fx:id="maskImage" />
+				<ImageView fx:id="morphImage" />
+			</VBox>
+		</HBox>
+	</center>
+	<bottom>
+		<VBox alignment="CENTER" spacing="15">
+			<Button fx:id="cameraButton" alignment="center" text="Start camera" onAction="#startCamera" />
+			<Separator />
+			<Label fx:id="hsvCurrentValues" />
+		</VBox>
+	</bottom>
+</BorderPane>

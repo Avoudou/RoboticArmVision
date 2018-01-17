@@ -1,6 +1,5 @@
 package graphDefinition;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,7 +15,7 @@ public class Vertex<VState> {
 		this.state = state;
 		adjacentVertices = new ArrayList<Vertex<VState>>();
 		this.uniqueId = uniqueId;
-		isExplored= false;
+		isExplored = false;
 	}
 
 	public boolean isExplored() {
@@ -38,6 +37,5 @@ public class Vertex<VState> {
 	public VState getState() {
 		return state;
 	}
-
 
 }

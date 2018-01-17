@@ -7,7 +7,6 @@ public class Edge<EState> {
 	private Vertex<?> secondEndVertex;
 
 	public Edge(EState edgeState, Vertex<?> firstEndVertex, Vertex<?> secondEndVertex) {
-		super();
 		this.edgeState = edgeState;
 		this.firstEndVertex = firstEndVertex;
 		this.secondEndVertex = secondEndVertex;
@@ -24,6 +23,5 @@ public class Edge<EState> {
 	public EState getEdgeState() {
 		return edgeState;
 	}
-
 
 }
