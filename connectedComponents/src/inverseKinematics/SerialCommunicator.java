@@ -15,7 +15,9 @@ import java.util.Enumeration;
 public class SerialCommunicator implements SerialPortEventListener {
 	SerialPort serialPort;
 	/** The port we're normally going to use. */
-	private static final String PORT_NAMES[] = { "/dev/tty.usbserial-A9007UX1", // Mac OS X
+	private static final String PORT_NAMES[] = { "/dev/tty.usbserial-A9007UX1", // Mac
+																				// OS
+																				// X
 			"/dev/ttyACM0", // Raspberry Pi
 			"/dev/ttyUSB0", // Linux
 			"COM3", // Windows
@@ -74,11 +76,17 @@ public class SerialCommunicator implements SerialPortEventListener {
 		} catch (Exception e) {
 			System.err.println(e.toString());
 		}
+		try {
+			Thread.sleep(4000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	/**
-	 * This should be called when you stop using the port. This will prevent port
-	 * locking on platforms like Linux.
+	 * This should be called when you stop using the port. This will prevent
+	 * port locking on platforms like Linux.
 	 */
 	public synchronized void close() {
 		if (serialPort != null) {
@@ -99,36 +107,26 @@ public class SerialCommunicator implements SerialPortEventListener {
 				System.err.println(e.toString());
 			}
 		}
-		// Ignore all the other eventTypes, but you should consider the other ones.
+		// Ignore all the other eventTypes, but you should consider the other
+		// ones.
 	}
-//	public void sendMessage(String msg) {
-//		if (serialPort != null) {
-//			try {
-//				outputStream.write(msg.getBytes());
-//			} catch (IOException e) {
-//				e.printStackTrace();
-//			}
-//		}
-//	}
-
-
 
 	public static void main(String[] args) throws Exception {
 		SerialCommunicator main = new SerialCommunicator();
 		main.initialize();
+		System.out.println("initialized");
+		try {
+			String messageString = "1090";
+			main.output.write(messageString.getBytes());
+			main.output.flush();
+			Thread.sleep(1000);
+			main.output.write("1090".getBytes());
 		
-				try {
-					String messageString= "1045";
-					 main.output.write(messageString.getBytes());
-				
-					
-				} catch (IOException ie) {
-				}
-		
-		
-		//System.out.println("Started");
-		
-	
-		
+
+		} catch (IOException ie) {
+		}
+
+		// System.out.println("Started");
+
 	}
 }
