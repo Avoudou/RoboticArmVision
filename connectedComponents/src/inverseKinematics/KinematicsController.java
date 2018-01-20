@@ -6,23 +6,24 @@ import java.util.HashMap;
 import ImageProcessing.Coordinates;
 import ImageProcessing.FrameProcessor;
 import detection.FocusState;
+import lombok.Getter;
+import lombok.Setter;
 
 public class KinematicsController {
 
 	private InverseKinematics kinematics;
-	//private SerialCommunicator communicator;
-	private FrameProcessor frameProcessor;
-	private HashMap<FocusState, Integer> actualAnglesOfJoints;
+	SerialCommunicator communicator;
 	private HashMap<FocusState, Integer> desiredAnglesOfJoints;
+	public HashMap<FocusState, Coordinates> jointPosistions = new HashMap<>();
+	public Point2D predictedGoal;
 
-	public KinematicsController(FrameProcessor fp, InverseKinematics ik) {
-		this.frameProcessor = fp;
-		//this.communicator = comm;
+	public KinematicsController(InverseKinematics ik, SerialCommunicator comm) {
 		this.kinematics = ik;
+		this.communicator = comm;
 	}
 
 	// DO WE ACTUALLY NEED IT?
-	private void updateAngles() {
+	/*private void updateAngles() {
 		HashMap<FocusState, Coordinates> coords = frameProcessor.getJointPosistions();
 		for (FocusState fs : FocusState.values()) {
 			int angle = 1000;
@@ -48,9 +49,9 @@ public class KinematicsController {
 				actualAnglesOfJoints.put(fs, angle);
 			}
 		}
-	}
+	}*/
 	
-	private void updateDesiredAngles() {
+	public void updateDesiredAngles() {
 		for (FocusState fs : FocusState.values()) {
 			int angle = 1000;
 			if (fs == FocusState.ORIGIN) {
@@ -83,8 +84,4 @@ public class KinematicsController {
 		return "" + result;
 	}
 	
-
-	// 1. Get current position of joints
-	// 2. Do inverse kinematics and calculate desired angles
-	// 3. Apply them via serial port
 }

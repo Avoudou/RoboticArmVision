@@ -1,14 +1,13 @@
 package ImageProcessing;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.LinkedList;
 
 import org.opencv.core.Mat;
 
 import com.badlogic.gdx.math.Vector3;
 
 import detection.FocusState;
+import detection.Launcher;
 import graphDefinition.Graph;
 import graphDefinition.Vertex;
 import graphSearch.ConnectedComponents;
@@ -16,45 +15,40 @@ import graphSearch.ImageMatrixCell;
 
 public class FrameProcessor {
 
-	private List<Coordinates> velocityEstimationList;
-	private HashMap<FocusState, Coordinates> jointPosistions = new HashMap<>();
+	private LinkedList<Coordinates> velocityEstimationList = new LinkedList<>();
 	private int zeroDistanceCompSize = 100;
 	private int referanceDistanceCompSize = 1000;
 	private int referanceDistance = 500;
-	private final int STEPS_TO_GET_MEAN_VELOCITY = 6;
+	private final int STEPS_TO_GET_MEAN_VELOCITY = 3;
 
 	public FrameProcessor(int zeroZsize, int referanceZsize) {
-		velocityEstimationList = new ArrayList<>();
 		this.zeroDistanceCompSize = zeroZsize;
 		this.referanceDistance = referanceZsize;
 	}
 
-	public Coordinates getCoordinatesOfSignificantObject(Mat mat, FocusState detectedObject) {
+	public void updateCoordinatesOfSignificantObject(Mat mat, FocusState detectedObject) {
 		ConnectedComponents componentAnalyzer = new ConnectedComponents(mat);
 		Graph<ImageMatrixCell, ?> objectGraph = componentAnalyzer.getBiggestComponent();
 		if (objectGraph != null && objectGraph.getSize() > 0) {
-			Coordinates cords = getMeanCenterForGraph(objectGraph, detectedObject.toString());
-			if (detectedObject == FocusState.BALL) {
-				System.out.println("Coords for " + detectedObject.toString().toLowerCase() + ": X = " + cords.getX()
-						+ " Y = " + cords.getY() + " Size :" + objectGraph.getSize());
-			}
-			jointPosistions.put(detectedObject, cords);
-
+			Coordinates cords = getMeanCenterForGraph(objectGraph, detectedObject);
+			System.out.println("Coords for " + detectedObject.toString().toLowerCase() + ": X = " + cords.getX()
+					+ " Y = " + cords.getY() + " Size :" + objectGraph.getSize());
 			if (detectedObject == FocusState.BALL) {
 				if (velocityEstimationList.size() < STEPS_TO_GET_MEAN_VELOCITY) {
-					velocityEstimationList.add(cords);
+					velocityEstimationList.addLast(cords);
 				} else {
-					velocityEstimationList.remove(0);
-					velocityEstimationList.add(cords);
+					velocityEstimationList.removeFirst();
+					velocityEstimationList.addLast(cords);
+					updateMovingObjectEstimatedCoordinates();
 				}
 			}
-
-			return cords;
+			Launcher.kinematicsController.jointPosistions.put(detectedObject, cords);
+		} else {
+			velocityEstimationList.clear();
 		}
-		return new Coordinates(-999, -999, -999);
 	}
 
-	public Coordinates getMeanCenterForGraph(Graph<ImageMatrixCell, ?> graph, String objectDescription) {
+	public Coordinates getMeanCenterForGraph(Graph<ImageMatrixCell, ?> graph, FocusState focus) {
 		int avgX = 0;
 		int avgY = 0;
 		int sumX = 0;
@@ -65,31 +59,31 @@ public class FrameProcessor {
 		}
 		avgX = (int) Math.round(sumX / graph.getSize());
 		avgY = (int) Math.round(sumY / graph.getSize());
-		if (objectDescription == "ball") {
+		if (focus == FocusState.BALL) {
 			return new Coordinates(avgX, avgY, (int) calculateBallZ(graph));
 		}
 		return new Coordinates(avgX, avgY, 0);
 	}
-
-	public Coordinates getMovingObjectEstimatedCoordinates() {
-		float pointAX = velocityEstimationList.get(velocityEstimationList.size() - 1).getX();
-		float pointAY = velocityEstimationList.get(velocityEstimationList.size() - 1).getY();
-		float pointAZ = velocityEstimationList.get(velocityEstimationList.size() - 1).getZ();
+ 
+	public void updateMovingObjectEstimatedCoordinates() {
+		float pointAX = velocityEstimationList.getLast().getX();
+		float pointAY = velocityEstimationList.getLast().getY();
+		float pointAZ = velocityEstimationList.getLast().getZ();
 		Vector3 linePointA = new Vector3(pointAX, pointAY, pointAZ);
 
-		float pointBX = velocityEstimationList.get(0).getX();
-		float pointBY = velocityEstimationList.get(0).getY();
-		float pointBZ = velocityEstimationList.get(0).getZ();
-		Vector3 linePointB = new Vector3(pointAX, pointAY, pointAZ);
+		float pointBX = velocityEstimationList.getFirst().getX();
+		float pointBY = velocityEstimationList.getFirst().getY();
+		float pointBZ = velocityEstimationList.getFirst().getZ();
+		Vector3 linePointB = new Vector3(pointBX, pointBY, pointBZ);
 
 		Vector3 parralelToDirectionVector = new Vector3(linePointA);
 		parralelToDirectionVector.sub(linePointB.cpy());
 
 		double interParam = (-linePointA.z) / parralelToDirectionVector.z;
-		double predictonX = linePointA.x + interParam * parralelToDirectionVector.x;
-		double predictonY = linePointA.y + interParam * parralelToDirectionVector.y;
+		double predictionX = linePointA.x + interParam * parralelToDirectionVector.x;
+		double predictionY = linePointA.y + interParam * parralelToDirectionVector.y;
 
-		return new Coordinates((int) predictonX, (int) predictonY, 0);
+		Launcher.kinematicsController.predictedGoal.setLocation(predictionX, predictionY); 
 	}
 
 	private double calculateBallZ(Graph<ImageMatrixCell, ?> graph) {
@@ -99,7 +93,4 @@ public class FrameProcessor {
 		return z;
 	}
 
-	public HashMap<FocusState, Coordinates> getJointPosistions() {
-		return jointPosistions;
-	}
 }

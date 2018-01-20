@@ -2,28 +2,19 @@ package inverseKinematics;
 
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
+import java.util.HashMap;
+
+import detection.FocusState;
 
 public class InverseKinematics {
 
-	public Point2D mountingPoint = new Point2D.Double(), topPosition = new Point2D.Double(),
-			middlePosition = new Point2D.Double(), bottomPosition = new Point2D.Double(), goal = new Point2D.Double();
-	private Point2D mountingPointPrime = new Point2D.Double(), topPositionPrime = new Point2D.Double(),
-			middlePositionPrime = new Point2D.Double(), bottomPositionPrime = new Point2D.Double();
+	public Point2D mountingPoint, topPosition, middlePosition, bottomPosition, goal;
+	private Point2D mountingPointPrime = new Point2D.Double(0, 0), topPositionPrime = new Point2D.Double(0, 0),
+			middlePositionPrime = new Point2D.Double(0, 0), bottomPositionPrime = new Point2D.Double(0, 0);
 	private int lengthTopArm, lengthMiddleArm, lengthBottomArm;
 	private final int ITERATIONS = 10;
 
-	public InverseKinematics(ArrayList<Point2D> initialPositions, Point2D goal) {
-		this.goal = goal;
-		this.mountingPoint.setLocation(initialPositions.get(0));
-		this.mountingPointPrime.setLocation(initialPositions.get(0));
-		this.topPosition.setLocation(initialPositions.get(1));
-		this.topPositionPrime.setLocation(initialPositions.get(1));
-		this.middlePosition.setLocation(initialPositions.get(2));
-		this.middlePositionPrime.setLocation(initialPositions.get(2));
-		this.bottomPosition.setLocation(initialPositions.get(3));
-		this.bottomPositionPrime.setLocation(initialPositions.get(3));
-		getLengthsForArms();
-	}
+	public InverseKinematics() {}
 
 	public boolean isGoalReachable() {
 		if ((lengthTopArm + lengthMiddleArm + lengthBottomArm) >= mountingPoint.distance(goal)) {
@@ -97,7 +88,8 @@ public class InverseKinematics {
 		double distAAng = a.distance(angular);
 		double distBAng = b.distance(angular);
 		double distAB = a.distance(b);
-		double angleInRadians = Math.acos(-(Math.pow(distAB, 2) - Math.pow(distAAng, 2) - Math.pow(distBAng, 2)) / (2 * distAAng * distBAng));
+		double angleInRadians = Math.acos(
+				-(Math.pow(distAB, 2) - Math.pow(distAAng, 2) - Math.pow(distBAng, 2)) / (2 * distAAng * distBAng));
 		int angleInDegrees = (int) Math.round(angleInRadians * 180 / Math.PI);
 		angleInDegrees = angleInDegrees > 180 ? 360 - angleInDegrees : angleInDegrees;
 		return angleInDegrees;
@@ -117,21 +109,11 @@ public class InverseKinematics {
 		System.out.println("Middle: (" + middlePosition.getX() + ", " + middlePosition.getY() + ")");
 		System.out.println("Bottom: (" + bottomPosition.getX() + ", " + bottomPosition.getY() + ")"
 				+ "\n------------------ ANGLES -------------------");
-		System.out.println("Origin: " + getAngleBetweenThreePoints(new Point2D.Double(mountingPoint.getX(), mountingPoint.getY() - 10), mountingPoint, topPosition));
+		System.out.println("Origin: " + getAngleBetweenThreePoints(
+				new Point2D.Double(mountingPoint.getX(), mountingPoint.getY() - 10), mountingPoint, topPosition));
 		System.out.println("Top: " + getAngleBetweenThreePoints(mountingPoint, topPosition, middlePosition));
-		System.out.println("Middle: " + getAngleBetweenThreePoints(topPosition, middlePosition, bottomPosition) + "\n\n");
-	}
-
-	public static void main(String[] args) {
-		ArrayList<Point2D> joints = new ArrayList<>();
-		joints.add(new Point2D.Double(400, 100));
-		joints.add(new Point2D.Double(300, 300));
-		joints.add(new Point2D.Double(600, 400));
-		joints.add(new Point2D.Double(500, 600));
-		InverseKinematics ik = new InverseKinematics(joints, new Point2D.Double(700, 400));
-		ik.dumpVariables();
-		ik.performIK();
-		ik.dumpVariables();
+		System.out
+				.println("Middle: " + getAngleBetweenThreePoints(topPosition, middlePosition, bottomPosition) + "\n\n");
 	}
 
 }

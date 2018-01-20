@@ -94,9 +94,11 @@ public class ObjRecognitionController {
 	// property for object binding
 	private ObjectProperty<String> hsvValuesProp;
 
-	private int detectionIntervalMs = 1000;
+	private final int DETECTION_INTERVAL_BALL = 33;
+	private final int DETECTION_INTERVAL_BOT = 64;
+	private final int FRAME_CAPTURE_RATE = 33; // time in ms between frame captures
 	private boolean detect = false;
-	private FrameProcessor processor = new FrameProcessor(100, 1000);
+	private boolean originDetected = false;
 
 	private FocusState focusState = FocusState.BALL;
 	private HashMap<FocusState, DetectionParameters> sliderValues = new HashMap<>();
@@ -111,7 +113,6 @@ public class ObjRecognitionController {
 		hsvValuesProp = new SimpleObjectProperty<>();
 		this.hsvCurrentValues.textProperty().bind(hsvValuesProp);
 
-		// set a fixed width for all the image to show and preserve image ratio
 		this.imageViewProperties(this.originalFrame, 400);
 		this.imageViewProperties(this.maskImage, 200);
 		this.imageViewProperties(this.morphImage, 200);
@@ -120,7 +121,6 @@ public class ObjRecognitionController {
 			this.capture.open(0);
 			if (this.capture.isOpened()) {
 				this.cameraActive = true;
-				// grab a frame every 33 ms (30 fps)
 				Runnable frameGrabber = new Runnable() {
 					@Override
 					public void run() {
@@ -130,7 +130,7 @@ public class ObjRecognitionController {
 					}
 				};
 				this.timer = Executors.newSingleThreadScheduledExecutor();
-				this.timer.scheduleAtFixedRate(frameGrabber, 0, 33, TimeUnit.MILLISECONDS);
+				this.timer.scheduleAtFixedRate(frameGrabber, 0, FRAME_CAPTURE_RATE, TimeUnit.MILLISECONDS);
 				this.cameraButton.setText("Stop Camera");
 			} else {
 				System.err.println("Failed to open the camera connection...");
@@ -158,7 +158,9 @@ public class ObjRecognitionController {
 					processFrame(frame, sliderValues.get(FocusState.TOP), FocusState.TOP);
 					processFrame(frame, sliderValues.get(FocusState.MIDDLE), FocusState.MIDDLE);
 					processFrame(frame, sliderValues.get(FocusState.BOTTOM), FocusState.BOTTOM);
-					processFrame(frame, sliderValues.get(FocusState.ORIGIN), FocusState.ORIGIN);
+					if (!originDetected) {
+						processFrame(frame, sliderValues.get(FocusState.ORIGIN), FocusState.ORIGIN);
+					}
 				}
 			} catch (Exception e) {
 				System.err.print("Exception during the image elaboration...");
@@ -206,8 +208,19 @@ public class ObjRecognitionController {
 			this.updateImageView(this.morphImage, Utils.mat2Image(morphOutput));
 		}
 
-		if (System.currentTimeMillis() - lastTimeProcessed.get(context) > detectionIntervalMs && detect) {
-			processor.getCoordinatesOfSignificantObject(morphOutput, context);
+		if (((context == FocusState.BALL
+				&& System.currentTimeMillis() - lastTimeProcessed.get(context) > DETECTION_INTERVAL_BALL)
+				|| (context != FocusState.BALL
+						&& System.currentTimeMillis() - lastTimeProcessed.get(context) > DETECTION_INTERVAL_BOT))
+						&& detect) {
+			if (context != FocusState.ORIGIN) {
+				Launcher.frameProcessor.updateCoordinatesOfSignificantObject(morphOutput, context);
+			} else {
+				if (!originDetected) {
+					Launcher.frameProcessor.updateCoordinatesOfSignificantObject(morphOutput, context);
+					originDetected = true;
+				}
+			}
 			lastTimeProcessed.replace(context, System.currentTimeMillis());
 		}
 
