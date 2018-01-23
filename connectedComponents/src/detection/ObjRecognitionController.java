@@ -74,7 +74,6 @@ public class ObjRecognitionController {
 	@FXML
 	private Slider dilation;
 
-	// Buttons to set the focus on given component
 	@FXML
 	private Button ballFocus;
 	@FXML
@@ -142,11 +141,6 @@ public class ObjRecognitionController {
 		}
 	}
 
-	/**
-	 * Get a frame from the opened video stream (if any)
-	 * 
-	 * @return the {@link Image} to show
-	 */
 	private Mat grabFrame() {
 		Mat frame = new Mat();
 		if (this.capture.isOpened()) {
@@ -214,10 +208,10 @@ public class ObjRecognitionController {
 						&& System.currentTimeMillis() - lastTimeProcessed.get(context) > DETECTION_INTERVAL_BOT))
 						&& detect) {
 			if (context != FocusState.ORIGIN) {
-				Launcher.frameProcessor.updateCoordinatesOfSignificantObject(morphOutput, context);
+				Launcher.frameProcessor.processFrame(morphOutput, context);
 			} else {
 				if (!originDetected) {
-					Launcher.frameProcessor.updateCoordinatesOfSignificantObject(morphOutput, context);
+					Launcher.frameProcessor.processFrame(morphOutput, context);
 					originDetected = true;
 				}
 			}

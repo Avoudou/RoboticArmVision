@@ -32,10 +32,10 @@
 			<Slider fx:id="dilation" min="1" max="40" value="7" blockIncrement="1" />
 			<Separator/>
 			<Button fx:id="ballFocus" alignment="center" text="Ball" onAction="#setBallFocus" />
+			<Button fx:id="originFocus" alignment="center" text="Origin" onAction="#setOriginFocus" />
 			<Button fx:id="topJointFocus" alignment="center" text="Top Joint" onAction="#setTopJointFocus" />
 			<Button fx:id="midJointFocus" alignment="center" text="Middle Joint" onAction="#setMidJointFocus" />
 			<Button fx:id="botJointFocus" alignment="center" text="Bottom Joint" onAction="#setBotJointFocus" />
-			<Button fx:id="originFocus" alignment="center" text="Origin" onAction="#setOriginFocus" />
 			<Separator/>
 			<Button fx:id="detectionButton" alignment="center" text="Turn On Detection" onAction="#toggleDetection" />
 		</VBox>

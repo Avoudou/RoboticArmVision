@@ -1,5 +1,6 @@
 package ImageProcessing;
 
+import java.awt.geom.Point2D;
 import java.util.LinkedList;
 
 import org.opencv.core.Mat;
@@ -12,6 +13,7 @@ import graphDefinition.Graph;
 import graphDefinition.Vertex;
 import graphSearch.ConnectedComponents;
 import graphSearch.ImageMatrixCell;
+import inverseKinematics.KinematicsController;
 
 public class FrameProcessor {
 
@@ -26,26 +28,48 @@ public class FrameProcessor {
 		this.referanceDistance = referanceZsize;
 	}
 
-	public void updateCoordinatesOfSignificantObject(Mat mat, FocusState detectedObject) {
-		ConnectedComponents componentAnalyzer = new ConnectedComponents(mat);
-		Graph<ImageMatrixCell, ?> objectGraph = componentAnalyzer.getBiggestComponent();
+	public void processFrame(Mat mat, FocusState detectedObject) {
+		Graph<ImageMatrixCell, ?> objectGraph = getGraphOfSignificantObject(mat);
 		if (objectGraph != null && objectGraph.getSize() > 0) {
-			Coordinates cords = getMeanCenterForGraph(objectGraph, detectedObject);
-			System.out.println("Coords for " + detectedObject.toString().toLowerCase() + ": X = " + cords.getX()
-					+ " Y = " + cords.getY() + " Size :" + objectGraph.getSize());
+			Coordinates coords = getMeanCenterForGraph(objectGraph, detectedObject);
+			dumpDetectedObjectProperties(detectedObject, objectGraph, coords);
+			Launcher.kinematicsController.updateJointPosition(detectedObject,
+					new Point2D.Double(coords.getX(), coords.getY()));
 			if (detectedObject == FocusState.BALL) {
 				if (velocityEstimationList.size() < STEPS_TO_GET_MEAN_VELOCITY) {
-					velocityEstimationList.addLast(cords);
+					velocityEstimationList.addLast(coords);
 				} else {
 					velocityEstimationList.removeFirst();
-					velocityEstimationList.addLast(cords);
+					velocityEstimationList.addLast(coords);
 					updateMovingObjectEstimatedCoordinates();
 				}
+			} else {
+				if ((detectedObject == FocusState.BOTTOM && Launcher.kinematicsController.kinematicsDoneForThisBall)
+						|| (detectedObject == FocusState.ORIGIN
+								&& !Launcher.kinematicsController.kinematicsDoneForThisBall)) {
+					Launcher.kinematicsController.performComputationsForIK();
+					Launcher.kinematicsController.updateDesiredAngles();
+					Launcher.kinematicsController.moveBot();
+				}
 			}
-			Launcher.kinematicsController.jointPosistions.put(detectedObject, cords);
 		} else {
-			velocityEstimationList.clear();
+			if (detectedObject == FocusState.BALL) {
+				velocityEstimationList.clear();
+				Launcher.kinematicsController.kinematicsDoneForThisBall = false;
+				System.out.println("Ball lost, kinematics available");
+			}
 		}
+	}
+
+	public Graph<ImageMatrixCell, ?> getGraphOfSignificantObject(Mat mat) {
+		ConnectedComponents componentAnalyzer = new ConnectedComponents(mat);
+		return componentAnalyzer.getBiggestComponent();
+	}
+
+	public void dumpDetectedObjectProperties(FocusState detectedObject, Graph<ImageMatrixCell, ?> objectGraph,
+			Coordinates coords) {
+		System.out.println("Coords for " + detectedObject.toString().toLowerCase() + ": X = " + coords.getX() + " Y = "
+				+ coords.getY() + " Size: " + objectGraph.getSize());
 	}
 
 	public Coordinates getMeanCenterForGraph(Graph<ImageMatrixCell, ?> graph, FocusState focus) {
@@ -64,7 +88,7 @@ public class FrameProcessor {
 		}
 		return new Coordinates(avgX, avgY, 0);
 	}
- 
+
 	public void updateMovingObjectEstimatedCoordinates() {
 		float pointAX = velocityEstimationList.getLast().getX();
 		float pointAY = velocityEstimationList.getLast().getY();
@@ -83,7 +107,7 @@ public class FrameProcessor {
 		double predictionX = linePointA.x + interParam * parralelToDirectionVector.x;
 		double predictionY = linePointA.y + interParam * parralelToDirectionVector.y;
 
-		Launcher.kinematicsController.predictedGoal.setLocation(predictionX, predictionY); 
+		Launcher.kinematicsController.setGoal(new Point2D.Double(predictionX, predictionY));
 	}
 
 	private double calculateBallZ(Graph<ImageMatrixCell, ?> graph) {

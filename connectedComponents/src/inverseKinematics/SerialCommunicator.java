@@ -12,6 +12,11 @@ import gnu.io.SerialPortEvent;
 import gnu.io.SerialPortEventListener;
 
 public class SerialCommunicator implements SerialPortEventListener {
+
+	public SerialCommunicator() {
+		initialize();
+	}
+
 	SerialPort serialPort;
 	/** The port we're normally going to use. */
 	private static final String PORT_NAMES[] = { "/dev/tty.usbserial-A9007UX1", // Mac OS X
@@ -36,7 +41,6 @@ public class SerialCommunicator implements SerialPortEventListener {
 		// gets us into the while loop and was suggested here was suggested
 		// http://www.raspberrypi.org/phpBB3/viewtopic.php?f=81&t=32186
 		System.setProperty("gnu.io.rxtx.SerialPorts", "COM3");
-
 		CommPortIdentifier portId = null;
 		Enumeration portEnum = CommPortIdentifier.getPortIdentifiers();
 
@@ -54,7 +58,6 @@ public class SerialCommunicator implements SerialPortEventListener {
 			System.out.println("Could not find COM port.");
 			return;
 		}
-
 		try {
 			// open serial port, and use class name for the appName.
 			serialPort = (SerialPort) portId.open(this.getClass().getName(), TIME_OUT);
@@ -71,8 +74,8 @@ public class SerialCommunicator implements SerialPortEventListener {
 			serialPort.addEventListener(this);
 			serialPort.notifyOnDataAvailable(true);
 			Thread.sleep(4000);
+
 		} catch (Exception e) {
-			System.err.println(e.toString());
 		}
 	}
 
@@ -96,36 +99,19 @@ public class SerialCommunicator implements SerialPortEventListener {
 				String inputLine = input.readLine();
 				System.out.println(inputLine);
 			} catch (Exception e) {
-				System.err.println(e.toString());
-			}
-		}
-		// Ignore all the other eventTypes, but you should consider the other ones.
-	}
-
-	public void sendMessage(String msg, SerialCommunicator comm) {
-		if (serialPort != null) {
-			try {
-				comm.output.write(msg.getBytes());
-			} catch (IOException e) {
-				e.printStackTrace();
+				//System.err.println(e.toString());
 			}
 		}
 	}
 
-	public static void main(String[] args) throws Exception {
-		SerialCommunicator main = new SerialCommunicator();
-		main.initialize();
-
+	public void sendMessage(String msg) {
 		try {
-			String messageString = "1045";
-			main.output.write(messageString.getBytes());
-			main.output.flush();
-			Thread.sleep(1000);		
-
-		} catch (IOException ie) {
+			this.output.write(msg.getBytes());
+			this.output.flush();
+			Thread.sleep(150);
+		} catch (IOException | InterruptedException e) {
+			e.printStackTrace();
 		}
-
-		// System.out.println("Started");
-
 	}
+
 }

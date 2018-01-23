@@ -8,13 +8,16 @@ import detection.FocusState;
 
 public class InverseKinematics {
 
-	public Point2D mountingPoint, topPosition, middlePosition, bottomPosition, goal;
+	public Point2D mountingPoint = new Point2D.Double(0, 0), topPosition = new Point2D.Double(0, 0),
+			middlePosition = new Point2D.Double(0, 0), bottomPosition = new Point2D.Double(0, 0),
+			goal = new Point2D.Double(0, 0);
 	private Point2D mountingPointPrime = new Point2D.Double(0, 0), topPositionPrime = new Point2D.Double(0, 0),
 			middlePositionPrime = new Point2D.Double(0, 0), bottomPositionPrime = new Point2D.Double(0, 0);
 	private int lengthTopArm, lengthMiddleArm, lengthBottomArm;
 	private final int ITERATIONS = 10;
 
-	public InverseKinematics() {}
+	public InverseKinematics() {
+	}
 
 	public boolean isGoalReachable() {
 		if ((lengthTopArm + lengthMiddleArm + lengthBottomArm) >= mountingPoint.distance(goal)) {
@@ -24,15 +27,12 @@ public class InverseKinematics {
 		}
 	}
 
-	public boolean performIK() {
-		if (!isGoalReachable()) {
-			return false;
-		}
+	public void performIK() {
+		getLengthsOfArms();
 		for (int i = 0; i < ITERATIONS; i++) {
 			backwardEstimation();
 			forwardEstimation();
 		}
-		return true;
 	}
 
 	public void forwardEstimation() {
@@ -95,7 +95,7 @@ public class InverseKinematics {
 		return angleInDegrees;
 	}
 
-	public void getLengthsForArms() {
+	public void getLengthsOfArms() {
 		lengthBottomArm = (int) bottomPosition.distance(middlePosition);
 		lengthMiddleArm = (int) middlePosition.distance(topPosition);
 		lengthTopArm = (int) topPosition.distance(mountingPoint);
@@ -108,12 +108,10 @@ public class InverseKinematics {
 		System.out.println("Top: (" + topPosition.getX() + ", " + topPosition.getY() + ")");
 		System.out.println("Middle: (" + middlePosition.getX() + ", " + middlePosition.getY() + ")");
 		System.out.println("Bottom: (" + bottomPosition.getX() + ", " + bottomPosition.getY() + ")"
-				+ "\n------------------ ANGLES -------------------");
-		System.out.println("Origin: " + getAngleBetweenThreePoints(
-				new Point2D.Double(mountingPoint.getX(), mountingPoint.getY() - 10), mountingPoint, topPosition));
-		System.out.println("Top: " + getAngleBetweenThreePoints(mountingPoint, topPosition, middlePosition));
-		System.out
-				.println("Middle: " + getAngleBetweenThreePoints(topPosition, middlePosition, bottomPosition) + "\n\n");
+		+ "\n------------------ LENGTHS OF ARMS -------------------");
+		System.out.println("Ori - Top: " + lengthTopArm);
+		System.out.println("Top - Mid: " + lengthMiddleArm);
+		System.out.println("Mid - Bot: " + lengthBottomArm);
 	}
 
 }

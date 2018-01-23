@@ -7,11 +7,12 @@ import inverseKinematics.SerialCommunicator;
 
 public class Launcher {
 
-	public static FrameProcessor frameProcessor = new FrameProcessor(1200, 50000);
-	public static KinematicsController kinematicsController = new KinematicsController(new InverseKinematics(), new SerialCommunicator());
-	public static SerialCommunicator serialCommunicator = new SerialCommunicator();
+	public static FrameProcessor frameProcessor;
+	public static KinematicsController kinematicsController;
 
 	public static void main(String[] args) {
+		Launcher.frameProcessor = new FrameProcessor(5000, 250);
+		Launcher.kinematicsController = new KinematicsController(new InverseKinematics(), new SerialCommunicator());
 		ObjRecognition recognizer = new ObjRecognition();
 		recognizer.LaunchRec(args);
 	}
